@@ -48,8 +48,11 @@ def project(x):
     x = x * OUTPUT_SCALE
     x = np.reshape(x, OUTPUT_SHAPE)
 
+    return x
+
 class Project(Resource):
     def post(self):
+        #TODO: use ppcl for this?
         r = requests.post(SOURCE_URL)
         r.raise_for_status()
         x = json_to_nd(r.json())
