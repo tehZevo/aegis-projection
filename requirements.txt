@@ -1,5 +1,6 @@
 numpy
-git+https://github.com/tehzevo/nd-to-json#egg=nd_to_json
+keras
+git+https://github.com/tehzevo/nd-to-json
 requests
 flask
 flask_restful

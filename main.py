@@ -3,6 +3,8 @@ import numpy as np
 import requests
 from flask import Flask, request
 from flask_restful import Resource, Api
+from keras.layers import Dense
+from keras.models import Sequential, load_model
 
 from nd_to_json import nd_to_json, json_to_nd
 
@@ -17,30 +19,34 @@ INPUT_SHAPE = [int(i) for i in INPUT_SHAPE]
 OUTPUT_SHAPE = os.getenv("OUTPUT_SHAPE").split()
 OUTPUT_SHAPE = [int(i) for i in OUTPUT_SHAPE]
 DENSITY = float(os.getenv("DENSITY", 0.1))
-PRE_SCALE = float(os.getenv("PRE_SCALE", 1))
-# POST_SCALE = float(os.getenv("POST_SCALE", 1)) #TODO: apply after squash, if squash
-SQUASH = os.getenv("SQUASH", "").lower() in (True, 'true') #default to false
+INPUT_SCALE = float(os.getenv("INPUT_SCALE", 1))
+OUTPUT_SCALE = float(os.getenv("OUTPUT_SCALE", 1))
+ACTIVATION = os.getenv("ACTIVATION", None).lower()
+
+MODEL_PATH = os.getenv("MODEL_PATH", "models/projection")
 
 in_size = np.prod(INPUT_SHAPE)
 out_size = np.prod(OUTPUT_SHAPE)
-#xavier-ish, just not truncated
-stddev = np.sqrt(2 / (in_size + out_size))
 
-weights = np.random.normal(0, stddev, [in_size, out_size])
-weights = np.where(
-    np.random.random(size=weights.shape) < DENSITY,
-    weights,
-    np.zeros_like(weights)
-)
+try:
+    model = load_model(MODEL_PATH)
+except:
+    print('"{}" not found. Creating new model.'.format(MODEL_PATH))
+    model = Sequential([
+        Dense(out_size, activation=ACTIVATION, input_shape=[in_size])
+    ])
+    print([x.shape for x in model.get_weights()])
+    os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+    model.save(MODEL_PATH, save_format="h5")#TODO: use tf in the future
+
+model.summary()
 
 def project(x):
     x = x.flatten()
-    x = np.matmul(x, weights)
+    x = x * INPUT_SCALE
+    x = model.predict(np.expand_dims(x, 0))[0]
+    x = x * OUTPUT_SCALE
     x = np.reshape(x, OUTPUT_SHAPE)
-    x = x * PRE_SCALE
-    if SQUASH:
-        x = np.tanh(x)
-    return x
 
 class Project(Resource):
     def post(self):
