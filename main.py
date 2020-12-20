@@ -21,7 +21,7 @@ OUTPUT_SHAPE = [int(i) for i in OUTPUT_SHAPE]
 DENSITY = float(os.getenv("DENSITY", 0.1))
 INPUT_SCALE = float(os.getenv("INPUT_SCALE", 1))
 OUTPUT_SCALE = float(os.getenv("OUTPUT_SCALE", 1))
-ACTIVATION = os.getenv("ACTIVATION", None).lower()
+ACTIVATION = os.getenv("ACTIVATION", None)
 
 MODEL_PATH = os.getenv("MODEL_PATH", "models/projection")
 

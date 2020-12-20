@@ -1,8 +1,10 @@
-FROM python:3
+FROM tensorflow/tensorflow
 
 WORKDIR /app
 
 COPY requirements.txt .
+RUN apt update -y
+RUN apt install git -y
 RUN pip install -r requirements.txt
 
 COPY . .
